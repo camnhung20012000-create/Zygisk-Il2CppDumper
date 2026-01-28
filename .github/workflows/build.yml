@@ -1,27 +1,36 @@
 name: Build
 on:
   workflow_dispatch:
-      inputs:
-        package_name:
-          description: "Package name of the game:"
-          required: true
+    inputs:
+      package_name:
+        description: "Package name of the game:"
+        required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-java@v3
+    # ✅ 建议升级到 v4 (避免未来 checkout 报错)
+    - uses: actions/checkout@v4
+    
+    # ✅ 建议升级到 v4 (避免未来 setup-java 报错)
+    - uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 11
         cache: gradle
+        
     - run: |
         chmod +x ./gradlew
+        # 这里是你的核心修改逻辑，保持不变
         sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
         sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
         ./gradlew :module:assembleRelease
-    - uses: actions/upload-artifact@v3
+        
+    # ✅ 这里是你已经修好的部分
+    - uses: actions/upload-artifact@v4
       with:
         name: zygisk-il2cppdumper
+        # ⚠️ 注意：确保 gradle 构建完真的会生成这个目录
+        # 如果 Zygisk-Il2CppDumper 原版是输出到 out/ 根目录，这里可能要写 path: out/
         path: out/magisk_module_release/
